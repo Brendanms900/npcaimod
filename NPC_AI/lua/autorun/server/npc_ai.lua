@@ -1,7 +1,6 @@
 /*NPC AI MOD
 BY: TB
-File version 1.2 <- ill probably forget to change this so dont worry bout it
-changed*/
+File version 1.2 <- ill probably forget to change this so dont worry bout it*/
 
 CreateConVar( "NPC_ai", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } ) 
 CreateConVar( "NPC_ai_Reuse", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
@@ -27,7 +26,7 @@ function OnEntityCreated2( spawned )
 
 if spawned:IsNPC() && spawned:IsValid() then
 if GetConVar( "NPC_ai_Manh" ):GetBool() then
-if spawned:GetClass()=="npc_metropolice" then//take out the edit out marks if you want them to have manhacks
+if spawned:GetClass()=="npc_metropolice" then
 spawned:SetKeyValue("manhacks" , GetConVarNumber("NPC_ai_ManhA"))//gives the metro police manhacks
 end
 end
@@ -48,7 +47,7 @@ spawned.times=1
 spawned.hits=0
 spawned.blocked=false
 if spawned:GetClass()=="npc_fastzombie"||spawned:GetClass()=="npc_antlion" || spawned:GetClass()=="npc_antlion_worker" then
-spawned.walkover=1000
+spawned.walkover=155
 else
 spawned.walkover=17
 end
