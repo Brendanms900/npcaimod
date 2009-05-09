@@ -1,6 +1,7 @@
 /*NPC AI MOD
 BY: TB
-File version 1.2 <- ill probably forget to change this so dont worry bout it*/
+File version 1.2 <- ill probably forget to change this so dont worry bout it
+changed*/
 
 CreateConVar( "NPC_ai", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } ) 
 CreateConVar( "NPC_ai_Reuse", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
