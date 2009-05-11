@@ -51,13 +51,13 @@ function OnEntityCreated2( spawned )
 if spawned:IsNPC() && spawned:IsValid() then
 if(tonumber(AISetup.Config["Manh"]) == 1) then
 if spawned:GetClass()=="npc_metropolice" then
-spawned:SetKeyValue("manhacks" , GetConVarNumber("NPC_ai_ManhA"))//gives the metro police manhacks
+spawned:SetKeyValue("manhacks" , tonumber(AISetup.Config["Manh"]))//gives the metro police manhacks
 end
 end
 
 if(tonumber(AISetup.Config["Grenades"]) == 1) then
 if spawned:GetClass()=="npc_combine_s" then
-spawned:SetKeyValue("NumGrenades" , GetConVarNumber("NPC_ai_GrenadesA"))    // gives the combine grenades and ar2 combine balls to shoot
+spawned:SetKeyValue("NumGrenades" , tonumber(AISetup.Config["GrenadesA"]))    // gives the combine grenades and ar2 combine balls to shoot
 end
 end
 
@@ -300,7 +300,7 @@ if e:IsValid() then
 if e:IsNPC()&&e!=v||e:IsPlayer()&& tonumber(AISetup.Config["SquadsP"]) == 1 then
 if  v:Disposition(e)!=1 then
 friend=math.abs(v:GetPos().x-e:GetPos().x)+math.abs(v:GetPos().y-e:GetPos().y)+math.abs(v:GetPos().z-e:GetPos().z) 
-if friend<=GetConVarNumber("NPC_ai_SquadsJ") then
+if friend<=tonumber(AISetup.Config["SquadsJ"]) then
 
 if e.Squad==nil && v.Squad==nil then
 SquadsA =SquadsA +1
@@ -315,7 +315,7 @@ Squads[SquadsA].M={}
 Squads[SquadsA].M[Squads[SquadsA].A]=v
 end
 
-if e.IsL && v.Squad==nil && Squads[e.Squad].A2<GetConVarNumber("NPC_ai_SquadsA") then
+if e.IsL && v.Squad==nil && Squads[e.Squad].A2<tonumber(AISetup.Config["SquadsA"]) then
 v.Squad=e.Squad
 Squads[e.Squad].A=Squads[e.Squad].A +1
 Squads[e.Squad].A2=Squads[e.Squad].A2+1
@@ -335,7 +335,7 @@ if v.IsM==true then
 
 if v.wep!="squad" then
 v.wep="squad"
-v.distance=GetConVarNumber("NPC_ai_SquadsF") 
+v.distance=tonumber(AISetup.Config["SquadsF"])
 v.division=500
 end
 if Squads[v.Squad].L!=nil then
@@ -448,7 +448,7 @@ end
 end
 end
 end
-nextthink=CurTime()+GetConVarNumber("NPC_ai_ChaseThink")
+nextthink=CurTime()+tonumber(AISetup.Config["ChaseThink"])
 end
 end)
 Msg("NPCAI mod has been started\n")
