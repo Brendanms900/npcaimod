@@ -2,19 +2,43 @@
 BY: TB
 File version 1.2 <- ill probably forget to change this so dont worry bout it*/
 
-CreateConVar( "NPC_ai", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } ) 
-CreateConVar( "NPC_ai_Reuse", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_Turn", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_Manh", "0", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_Grenades", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_ManhA", "2", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_GrenadesA", "5", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_SquadsA", "5", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_Squads", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_SquadsP", "1", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_SquadsJ", "1500", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_SquadsF", "500", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
-CreateConVar( "NPC_ai_ChaseThink", "0.3", { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
+function AISetup.SetupSettings()
+	if(!sql.TableExists("aisetup3")) then
+		sql.Query("CREATE TABLE aisetup3(Active INTEGER NOT NULL, Reuse INTEGER NOT NULL, Turn INTEGER NOT NULL, Manh INTEGER NOT NULL, Grenades INTEGER NOT NULL, ManhA INTEGER NOT NULL, GrenadesA INTEGER NOT NULL, SquadsA INTEGER NOT NULL, Squads INTEGER NOT NULL, SquadsP INTEGER NOT NULL, SquadsJ INTEGER NOT NULL, SquadsF INTEGER NOT NULL, ChaseThink INTEGER NOT NULL);")
+		sql.Query("INSERT INTO aisetup3(Active, Reuse, Turn, Manh, Grenades, ManhA, GrenadesA, SquadsA, Squads, SquadsP, SquadsJ, SquadsF, ChaseThink) VALUES(1, 1, 1, 0, 1, 1, 5, 5, 1, 1, 1500, 500, 0.3)")
+	end
+	return sql.QueryRow("SELECT * FROM aisetup3 LIMIT 1")
+end
+
+AISetup.Config = AISetup.SetupSettings()
+function AISetup.ApplySettings(ply, cmd, args)
+	if(!ply:IsAdmin()) then
+		return
+	end
+
+	local Active = tonumber(ply:GetInfo("NPC2_ai_Active") or 1)
+	local Reuse = tonumber(ply:GetInfo("NPC2_ai_Reuse") or 1)
+	local Turn = tonumber(ply:GetInfo("NPC2_ai_Turn") or 1)
+	local Manh = tonumber(ply:GetInfo("NPC2_ai_Manh") or 0)
+	local Grenades = tonumber(ply:GetInfo("NPC2_ai_Grenades") or 1)
+	local ManhA = tonumber(ply:GetInfo("NPC2_ai_ManhA") or 2)
+	local GrenadesA = tonumber(ply:GetInfo("NPC2_ai_GrenadesA") or 5)
+	local SquadsA = tonumber(ply:GetInfo("NPC2_ai_SquadsA") or 5)
+	local Squads = tonumber(ply:GetInfo("NPC2_ai_Squads") or 1)
+	local SquadsP = tonumber(ply:GetInfo("NPC2_ai_SquadsP") or 1)
+	local SquadsJ = tonumber(ply:GetInfo("NPC2_ai_SquadsJ") or 1500)
+	local SquadsF = tonumber(ply:GetInfo("NPC2_ai_SquadsF") or 500)
+	local ChaseThink = tonumber(ply:GetInfo("NPC2_ai_ChaseThink") or 0.3)
+	local zero=0
+	sql.Query("UPDATE aisetup3 SET Active = "..Active..", Reuse = "..Reuse..", Turn = "..Turn..", Manh = "..Manh..", Grenades = "..Grenades..", ManhA = "..ManhA..", GrenadesA = "..GrenadesA..", SquadsA = "..SquadsA..", Squads = "..Squads..", SquadsP = "..SquadsP..", SquadsJ = "..SquadsJ..", SquadsF = "..SquadsF..", ChaseThink = "..ChaseThink)
+
+	AISetup.Config = sql.QueryRow("SELECT * FROM aisetup3 LIMIT 1")
+	
+	
+	print(ply:Nick().." Changed the AI Settings.")
+end
+concommand.Add("NPC2_ai_apply", AISetup.ApplySettings)
+
 //my attempt at something faster then findinsphere
 local everything={}
 local amount=1
@@ -25,13 +49,13 @@ local SquadsA = 0
 function OnEntityCreated2( spawned )
 
 if spawned:IsNPC() && spawned:IsValid() then
-if GetConVar( "NPC_ai_Manh" ):GetBool() then
+if(tonumber(AISetup.Config["Manh"]) == 1) then
 if spawned:GetClass()=="npc_metropolice" then
 spawned:SetKeyValue("manhacks" , GetConVarNumber("NPC_ai_ManhA"))//gives the metro police manhacks
 end
 end
 
-if GetConVar( "NPC_ai_Grenades" ):GetBool() then
+if(tonumber(AISetup.Config["Grenades"]) == 1) then
 if spawned:GetClass()=="npc_combine_s" then
 spawned:SetKeyValue("NumGrenades" , GetConVarNumber("NPC_ai_GrenadesA"))    // gives the combine grenades and ar2 combine balls to shoot
 end
@@ -51,7 +75,7 @@ spawned.walkover=155
 else
 spawned.walkover=17
 end
-if GetConVar( "NPC_ai_Reuse" ):GetBool() then
+if(tonumber(AISetup.Config["Reuse"]) == 1) then
 local found=false
 for i=0, amount do
 if found==false then
@@ -168,7 +192,7 @@ end
 end
 
 function EntityTakeDamage2( ent, inflictor, attacker, amount )
-if GetConVar( "NPC_ai_Turn" ):GetBool()  then
+if(tonumber(AISetup.Config["Turn"]) == 1) then
 //make friendlys turn against you if you shoot at them
 	if inflictor:IsPlayer()&& ent:IsNPC() && ent:Disposition(inflictor)!=1 && ent.hits!=nil then
 	ent.hits=ent.hits+1
@@ -179,10 +203,31 @@ if GetConVar( "NPC_ai_Turn" ):GetBool()  then
 end
 end
 
+function AISetup.AdminReloadPlayer(ply)
+	if(!ply or !ply:IsValid()) then
+		return
+	end
+	for k,v in pairs(AISetup.Config) do
+		local stuff = k
+		ply:ConCommand("NPC2_ai_"..stuff.." "..v.."\n")
+	end
+end
+
+function AISetup.AdminReload()
+	if(ply) then
+		AISetup.AdminReloadPlayer(ply)
+	else
+		for k,v in pairs(player.GetAll()) do
+			AISetup.AdminReloadPlayer(v)
+		end
+	end
+end
+
 function PlayerInitialSpawn2( ply )
 amount=amount+1
 everything[amount]=ply
-if GetConVar("NPC_ai_SquadsP"):GetBool() then
+AISetup.AdminReload(ply)
+if(tonumber(AISetup.Config["SquadsP"]) == 1) then
 SquadsA =SquadsA +1
 Squads[SquadsA]=ply
 ply.Squad=Squads[SquadsA]
@@ -197,7 +242,7 @@ end
 end
 
 function Removed(npc)
-if GetConVar( "NPC_ai_Squads" ):GetBool() then
+if(tonumber(AISetup.Config["Squads"]) == 1) then
 if npc:IsNPC() then
 if npc.Squad!=nil then
 Squads[npc.Squad].A2=Squads[npc.Squad].A2-1
@@ -240,7 +285,7 @@ local nextthink=0
  hook.Add("Think","NPCAI",
 function() 
 if CurTime()>=nextthink then
-if GetConVar( "NPC_ai" ):GetBool() then
+if(tonumber(AISetup.Config["Active"]) == 1) then
 for k, v in pairs(ents.FindByClass("npc_*")) do
 if v:IsNPC()&& v:IsValid() && v:GetClass()!="npc_rollermine"  then //this script makes rollermines buggy this fixs it
 
@@ -248,11 +293,11 @@ if v:IsNPC()&& v:IsValid() && v:GetClass()!="npc_rollermine"  then //this script
 local friend=0
 local finalpos=0
 local enemy
-if GetConVar( "NPC_ai_Squads" ):GetBool() then
+if(tonumber(AISetup.Config["Squads"]) == 1) then
 if v.Squad==nil && v:GetClass()!="npc_manhack" then
 for i,e in pairs(everything) do
 if e:IsValid() then
-if e:IsNPC()&&e!=v||e:IsPlayer()&& GetConVar( "NPC_ai_SquadsP" ):GetBool()then
+if e:IsNPC()&&e!=v||e:IsPlayer()&& tonumber(AISetup.Config["SquadsP"]) == 1 then
 if  v:Disposition(e)!=1 then
 friend=math.abs(v:GetPos().x-e:GetPos().x)+math.abs(v:GetPos().y-e:GetPos().y)+math.abs(v:GetPos().z-e:GetPos().z) 
 if friend<=GetConVarNumber("NPC_ai_SquadsJ") then
@@ -388,9 +433,9 @@ for i,e in pairs(everything) do
 					enemy=e
 					finalpos=enemy2
 					end
-				end     
+				end
 			end
-		end 
+		end
 	end
 end
 
