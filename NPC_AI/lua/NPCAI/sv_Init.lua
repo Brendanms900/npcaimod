@@ -46,6 +46,25 @@ local amount=1
 local Squads = {}
 local SquadsA = 0
 
+local donts={}
+donts[0]="npc_cscanner"
+donts[1]="npc_hunter"
+donts[2]="npc_rollermine"
+donts[3]="npc_antlion"
+donts[4]="npc_antlionguard"
+donts[5]="npc_antlion_worker"
+donts[6]="npc_fastzombie_torso"
+donts[7]="npc_headcrab_fast"
+donts[8]="npc_fastzombie"
+donts[9]="npc_headcrab"
+donts[10]="npc_headcrab_black"
+donts[11]="npc_poisonzombie"
+donts[12]="npc_headcrab_poison"
+donts[13]="npc_zombie"
+donts[14]="npc_zombie_torso"
+donts[15]="npc_zombine"
+donts[16]="npc_manhack"
+
 function OnEntityCreated2( spawned )
 
 if spawned:IsNPC() && spawned:IsValid() then
@@ -70,11 +89,18 @@ spawned.IsL=false
 spawned.times=1
 spawned.hits=0
 spawned.blocked=false
+spawned.cansquad=true
 if spawned:GetClass()=="npc_fastzombie"||spawned:GetClass()=="npc_antlion" || spawned:GetClass()=="npc_antlion_worker" then
 spawned.walkover=155
 else
 spawned.walkover=17
 end
+for h,l in pairs(donts) do
+if spawned:GetClass()==l then
+spawned.cansquad=false
+end
+end
+
 if(tonumber(AISetup.Config["Reuse"]) == 1) then
 local found=false
 for i=0, amount do
@@ -98,6 +124,11 @@ amount=amount+1
 everything[amount]=spawned
 end
 	end
+end
+
+function MoveToPosition(object, x, y, z, movement)
+object:SetLastPosition( Vector(x, y, z))
+object:SetSchedule( movement )
 end
 
 function Move(v, enemy, finalpos)
@@ -160,15 +191,13 @@ local trace3 = util.TraceHull(tracedata3)
 local search3 = trace3.Entity
 
 if search2==NULL then
-v:SetLastPosition( Vector(v:GetPos().x+right1.x, v:GetPos().y+right2.y, v:GetPos().z))
-v:SetSchedule( action )
+MoveToPosition(v, v:GetPos().x+right1.x, v:GetPos().y+right2.y, v:GetPos().z, action)
 v.blocked=false
 v.times=1
 return
 end
 if search3==NULL then
-v:SetLastPosition( Vector(v:GetPos().x+left1.x, v:GetPos().y+left2.y, v:GetPos().z))
-v:SetSchedule( action )
+MoveToPosition(v, v:GetPos().x+left1.x, v:GetPos().y+left2.y, v:GetPos().z, action)
 v.blocked=false
 v.times=1
 return
@@ -178,14 +207,12 @@ end
 else
 end
 
-if v:GetClass()!="npc_manhack" then
+if v:GetClass()!="npc_manhack" || v:GetClass()!="npc_cscanner" then
 if v.blocked==false then
-v:SetLastPosition( Vector(cordx,cordy,v:GetPos().z))
-v:SetSchedule( action )
+MoveToPosition(v, cordx, cordy, v:GetPos().z, action)
 end
 else 
-v:SetLastPosition( Vector(cordx,cordy,enemy:GetPos().z+5))
-v:SetSchedule( action )
+MoveToPosition(v, cordx, cordy, v:GetPos().z+5, action)
 end
 
 end
@@ -294,14 +321,13 @@ local friend=0
 local finalpos=0
 local enemy
 if(tonumber(AISetup.Config["Squads"]) == 1) then
-if v.Squad==nil && v:GetClass()!="npc_manhack" then
+if v.Squad==nil && v.cansquad==true then
 for i,e in pairs(everything) do
 if e:IsValid() then
 if e:IsNPC()&&e!=v||e:IsPlayer()&& tonumber(AISetup.Config["SquadsP"]) == 1 then
 if  v:Disposition(e)!=1 then
 friend=math.abs(v:GetPos().x-e:GetPos().x)+math.abs(v:GetPos().y-e:GetPos().y)+math.abs(v:GetPos().z-e:GetPos().z) 
 if friend<=tonumber(AISetup.Config["SquadsJ"]) then
-
 if e.Squad==nil && v.Squad==nil then
 SquadsA =SquadsA +1
 Squads[SquadsA]=v 
@@ -443,6 +469,7 @@ end
 if finalpos >= v.distance then
 Move(v, enemy, finalpos)
 end
+
 
 end
 end
