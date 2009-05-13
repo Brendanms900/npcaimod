@@ -207,12 +207,12 @@ end
 else
 end
 
-if v:GetClass()!="npc_manhack" || v:GetClass()!="npc_cscanner" then
+if v:GetClass()!="npc_manhack" &&   v:GetClass()!="npc_cscanner" then
 if v.blocked==false then
 MoveToPosition(v, cordx, cordy, v:GetPos().z, action)
 end
 else 
-MoveToPosition(v, cordx, cordy, v:GetPos().z+5, action)
+MoveToPosition(v, cordx, cordy, enemy:GetPos().z+5, action)
 end
 
 end
@@ -254,7 +254,7 @@ function PlayerInitialSpawn2( ply )
 amount=amount+1
 everything[amount]=ply
 AISetup.AdminReload(ply)
-if(tonumber(AISetup.Config["SquadsP"]) == 1) then
+
 SquadsA =SquadsA +1
 Squads[SquadsA]=ply
 ply.Squad=Squads[SquadsA]
@@ -265,7 +265,7 @@ Squads[SquadsA].A=1
 Squads[SquadsA].A2=1
 Squads[SquadsA].M={}
 Squads[SquadsA].M[Squads[SquadsA].A]=ply
-end
+
 end
 
 function Removed(npc)
@@ -303,6 +303,33 @@ end
 end
 end
 
+local cooldown=0
+function AddToSquad(activator, object)
+if CurTime()>=cooldown then
+if object:IsValid() && object:IsNPC() && activator:IsPlayer() then
+if object.Squad==nil then
+if(tonumber(AISetup.Config["SquadsP"]) == 1) && Squads[activator.Squad].A2<tonumber(AISetup.Config["SquadsA"]) && object:Disposition(activator)!=1 then
+object.Squad=activator.Squad
+Squads[activator.Squad].A=Squads[activator.Squad].A +1
+Squads[activator.Squad].A2=Squads[activator.Squad].A2+1
+object.IsM = true
+Squads[activator.Squad].M[Squads[activator.Squad].A]=object
+activator:ChatPrint("NPC has joined your squad.")
+end
+else
+if Squads[object.Squad].L==activator then
+object.Squad=nil
+Squads[activator.Squad].A2=Squads[activator.Squad].A2-1
+object.IsM = false
+activator:ChatPrint("NPC has left your squad.")
+end
+end
+end
+cooldown=CurTime()+2
+end
+end
+
+hook.Add( "PlayerUse", "addtosquad123", AddToSquad )
 hook.Add( "OnEntityCreated", "npcspawn123", OnEntityCreated2 )
 hook.Add( "EntityTakeDamage", "npcdmg123", EntityTakeDamage2 )
 hook.Add( "PlayerInitialSpawn", "addplayer123", PlayerInitialSpawn2 )
@@ -324,7 +351,7 @@ if(tonumber(AISetup.Config["Squads"]) == 1) then
 if v.Squad==nil && v.cansquad==true then
 for i,e in pairs(everything) do
 if e:IsValid() then
-if e:IsNPC()&&e!=v||e:IsPlayer()&& tonumber(AISetup.Config["SquadsP"]) == 1 then
+if e:IsNPC()&&e!=v then
 if  v:Disposition(e)!=1 then
 friend=math.abs(v:GetPos().x-e:GetPos().x)+math.abs(v:GetPos().y-e:GetPos().y)+math.abs(v:GetPos().z-e:GetPos().z) 
 if friend<=tonumber(AISetup.Config["SquadsJ"]) then
