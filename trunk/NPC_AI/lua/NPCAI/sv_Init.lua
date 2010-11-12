@@ -68,6 +68,19 @@ donts[16]="npc_manhack"
 function OnEntityCreated2( spawned )
 
 if spawned:IsNPC() && spawned:IsValid() then
+
+--[[  
+	Use one of these to your liking:
+		WEAPON_PROFICIENCY_POOR
+		WEAPON_PROFICIENCY_AVERAGE
+		WEAPON_PROFICIENCY_GOOD
+		WEAPON_PROFICIENCY_VERY_GOOD
+		WEAPON_PROFICIENCY_PERFECT
+
+]]
+
+spawned:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_VERY_GOOD ) 
+
 if(tonumber(AISetup.Config["Manh"]) == 1) then
 if spawned:GetClass()=="npc_metropolice" then
 spawned:SetKeyValue("manhacks" , tonumber(AISetup.Config["Manh"]))//gives the metro police manhacks
